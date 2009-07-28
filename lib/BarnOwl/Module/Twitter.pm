@@ -181,6 +181,12 @@ sub twitter_error {
     }
 }
 
+## TODO: Make this more lenient?
+sub is_source_barnowl {
+    my $source = shift;
+    return $source eq '<a href="http://barnowl.mit.edu">BarnOwl</a>';
+}
+
 sub poll_twitter {
     return unless ( time - $last_poll ) >= 60;
     $last_poll = time;
@@ -208,6 +214,19 @@ sub poll_twitter {
                 service   => $cfg->{service},
                );
             BarnOwl::queue_message($msg);
+
+	    # Mirror tweets sent from other clients to our class of choice
+	    if ( $tweet->{user}{screen_name} eq $cfg->{user} && !is_source_barnowl($msg->source) ) {
+		## TODO: Use BarnOwl variables for these
+		my $class = "wdaher";
+		my $instance = "status";
+		my $opcode = "from-twitter";
+		## TODO: If the opcode filter were '*', would this
+		## cause a horrible infinite loop of zephyr/twitter
+		## unpleasantness? Potentially. You probably want to
+		## investigate this.
+		BarnOwl::zephyr_zwrite("zwrite -c $class -i $instance -O $opcode", $msg->body);
+	    }
         }
         $last_id = $timeline->[0]{id};
     } else {
