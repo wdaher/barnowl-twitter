@@ -15,6 +15,7 @@ use base qw(BarnOwl::Message);
 sub context {'twitter'}
 sub subcontext {undef}
 sub service { return (shift->{"service"} || "http://twitter.com"); }
+sub source { return (shift->{"source"} || ""); }
 sub long_sender {
     my $self = shift;
     $self->service =~ m#^\s*(.*?://.*?)/.*$#;
